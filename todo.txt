@@ -1,0 +1,18 @@
+-- Banner Grabbing --
+
+* Service Name
+* Service Version
+* OS
+
+-- Enum --
+
+* Port Scan
+* Directory Scan
+* Subdomain Scan
+
+
+-- General --
+* Run from config file
+* Output results as file
+
+
