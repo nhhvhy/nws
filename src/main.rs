@@ -1,23 +1,19 @@
-use std::process::Command;
-use std::str;
-use std::env;
-use std::error::Error;
-// use std::collections::HashMap;
-use reqwest::Error as ReqwestError;
+use reqwest::{Error as ReqwestError, header::HeaderMap};
+use std::{env, error::Error, process::Command, str};
 
 struct Params {
     url: String,
     fqdn: String,
-    flags: Vec<String>
+    flags: Vec<String>,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-
     let params: Params = collect_params();
 
-    let _headers = fetch_headers(&params.url).await?;
-    
+    let headers = fetch_headers(&params.url).await?;
+    eprintln!("\n{:?}", headers);
+
     let nmap = nmap(params.fqdn, params.flags);
     eprintln!("\n{:?}", nmap);
 
@@ -26,12 +22,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 fn collect_params() -> Params {
     let args: Vec<String> = env::args().collect();
-    
+
     if args.len() < 3 {
         return Params {
             url: "http://scanme.nmap.org".to_string(),
             fqdn: "scanme.nmap.org".to_string(),
-            flags: vec![]
+            flags: vec![String::from("-sV")]                
         };
     }
 
@@ -40,19 +36,17 @@ fn collect_params() -> Params {
     let flags = Vec::from(&args[3..]);
     // dbg!(&url, &fqdn, &flags);
 
-    return Params {
-        url: url,
-        fqdn: fqdn,
-        flags: flags
-    }
-
+    Params { url, fqdn, flags }
 }
 
 // nmap doesn't like protocols, use fqdn instead of url
+// -sV: service & version detection (port scan)
+// -O: OS fingerprinting
+// -p: use 1-65535 for full scan, as nmap defaults to top 1000 ports
 fn nmap(address: String, flags: Vec<String>) -> Result<String, Box<dyn Error>> {
     let output = Command::new("nmap")
         .args(&flags)
-        .args(&[address])
+        .arg(&address)
         .output()
         .expect("failed to execute nmap command");
 
@@ -64,17 +58,9 @@ fn nmap(address: String, flags: Vec<String>) -> Result<String, Box<dyn Error>> {
     Ok(result)
 }
 
-async fn fetch_headers(address: &str) -> Result<(), ReqwestError> {
+async fn fetch_headers(address: &str) -> Result<HeaderMap, ReqwestError> {
     let client = reqwest::Client::new();
+    let res = client.get(address).send().await?;
 
-    let res = client.get(address)
-        .send()
-        .await?;
-
-    let headers = res.headers();
-    for (key, value) in headers.iter() {
-        eprintln!("{:?}: {:?}", key, value);
-    }
-
-    Ok(())
+    Ok(res.headers().clone())
 }
