@@ -14,5 +14,5 @@
 -- General --
 * Run from config file
 * Output results as file
-
+* Automatic extraction of FQDN from URL
 
