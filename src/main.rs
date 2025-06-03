@@ -1,5 +1,5 @@
 use reqwest::{Error as ReqwestError, header::HeaderMap};
-use std::{env, error::Error, process::Command, str};
+use std::{env, error::Error, process::Command, str, fs};
 
 struct Params {
     url: String,
@@ -43,10 +43,20 @@ fn collect_params() -> Params {
 // -sV: service & version detection (port scan)
 // -O: OS fingerprinting
 // -p: use 1-65535 for full scan, as nmap defaults to top 1000 ports
-fn nmap(address: String, flags: Vec<String>) -> Result<String, Box<dyn Error>> {
+fn nmap(address: String, mut flags: Vec<String>) -> Result<String, Box<dyn Error>> {
+    if !fs::exists("output") {
+        
+    }
+    let filepath = ["output/", &address].join("");
+    eprintln!("{}", filepath);
+
+    flags.push(String::from("-oX")); // Make output greppable
+    flags.push(filepath); // file path can't be pushed in the same string as the -oX flag, because reasons (?)
+    eprintln!("\n{:?}", flags);
+
     let output = Command::new("nmap")
-        .args(&flags)
         .arg(&address)
+        .args(&flags)
         .output()
         .expect("failed to execute nmap command");
 
