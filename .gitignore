@@ -1,3 +1,5 @@
 /target
 scanme.nmap.org
 test
+/output
+/output/*

@@ -1,5 +1,5 @@
 use reqwest::{Error as ReqwestError, header::HeaderMap};
-use std::{env, error::Error, process::Command, str, fs};
+use std::{env, error::Error, fs, process::Command, str};
 
 struct Params {
     url: String,
@@ -27,7 +27,7 @@ fn collect_params() -> Params {
         return Params {
             url: "http://scanme.nmap.org".to_string(),
             fqdn: "scanme.nmap.org".to_string(),
-            flags: vec![String::from("-sV")]                
+            flags: vec![String::from("-sV")],
         };
     }
 
@@ -44,10 +44,9 @@ fn collect_params() -> Params {
 // -O: OS fingerprinting
 // -p: use 1-65535 for full scan, as nmap defaults to top 1000 ports
 fn nmap(address: String, mut flags: Vec<String>) -> Result<String, Box<dyn Error>> {
-    if !fs::exists("output") {
-        
-    }
-    let filepath = ["output/", &address].join("");
+    fs::create_dir_all("output")?; // Create output folder if it doesn't already exist
+
+    let filepath = ["output/", &address.replace(".", "-"), ".xml"].join("");
     eprintln!("{}", filepath);
 
     flags.push(String::from("-oX")); // Make output greppable
